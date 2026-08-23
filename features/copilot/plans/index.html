@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Copilot Plans — RyanAwesomeMaths</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <h1>Copilot Plans</h1>
+        <p class="tagline">Smart, simple plans to help you learn and practice mathematics.</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <h2>Choose a plan that fits your learning</h2>
+        <p>Interactive practice, clear explanations, and progress tracking — all in a lightweight static site.</p>
+        <div class="plans">
+          <article class="plan">
+            <h3>Starter</h3>
+            <p class="price">Free</p>
+            <ul>
+              <li>Basic exercises</li>
+              <li>Weekly challenges</li>
+              <li>Community tips</li>
+            </ul>
+            <button class="cta">Get Starter</button>
+          </article>
+
+          <article class="plan recommended">
+            <h3>Pro</h3>
+            <p class="price">$5 / month</p>
+            <ul>
+              <li>All Starter features</li>
+              <li>Step-by-step solutions</li>
+              <li>Progress tracking</li>
+            </ul>
+            <button class="cta">Choose Pro</button>
+          </article>
+
+          <article class="plan">
+            <h3>Teacher</h3>
+            <p class="price">$15 / month</p>
+            <ul>
+              <li>Classroom tools</li>
+              <li>Bulk assignments</li>
+              <li>Performance reports</li>
+            </ul>
+            <button class="cta">Try Teacher</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="examples">
+        <h2>Try a quick calculation</h2>
+        <p>Type a simple arithmetic expression and press Calculate.</p>
+        <div class="calc">
+          <input id="expr" placeholder="e.g. 12/4 + 3*2" />
+          <button id="calc">Calculate</button>
+          <output id="result"></output>
+        </div>
+      </section>
+
+      <section class="about">
+        <h2>About this site</h2>
+        <p>This is a minimal static site generated and added to the repository. It uses only HTML/CSS/vanilla JS so it can be deployed with GitHub Pages.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">© 2026 RyanAwesomeMaths</div>
+    </footer>
+
+    <script>
+      // Very small safe evaluator for arithmetic expressions (numbers and +-*/^, parentheses)
+      document.getElementById('calc').addEventListener('click', () => {
+        const out = document.getElementById('result');
+        const expr = document.getElementById('expr').value.trim();
+        if (!expr) { out.textContent = 'Enter an expression'; return; }
+        try {
+          // Reject anything with letters or forbidden chars
+          if (/[^0-9+\-*/(). \^]/.test(expr)) throw new Error('Invalid characters');
+          // Replace ^ with ** for exponentiation
+          const safe = expr.replace(/\^/g, '**');
+          // eslint-disable-next-line no-eval
+          const value = Function('return (' + safe + ' )')();
+          out.textContent = String(value);
+        } catch (e) {
+          out.textContent = 'Error: ' + e.message;
+        }
+      });
+    </script>
+  </body>
+</html>

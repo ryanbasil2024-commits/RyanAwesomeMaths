@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #000; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span></div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 250, y: 350, width: 40, height: 30 };
+        let bullets = [];
+        let enemies = [];
+        let score = 0;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 5; j++) {
+                enemies.push({ x: j * 100 + 50, y: i * 60 + 20, width: 30, height: 20, active: true });
+            }
+        }
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#ff0';
+            enemies.forEach(e => { if (e.active) ctx.fillRect(e.x, e.y, e.width, e.height); });
+            ctx.fillStyle = '#fff';
+            bullets.forEach(b => ctx.fillRect(b.x, b.y, 3, 10));
+        }
+        function update() {
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= 5;
+            if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += 5;
+            bullets.forEach((b, i) => {
+                b.y -= 5;
+                if (b.y < 0) bullets.splice(i, 1);
+            });
+            enemies.forEach(e => {
+                if (e.active) e.x += 1;
+                if (e.x > canvas.width) e.x = 0;
+                if (e.y > canvas.height) { alert(`Game Over! Score: ${score}`); location.reload(); }
+            });
+            bullets.forEach((b, bi) => {
+                enemies.forEach((e, ei) => {
+                    if (e.active && b.x > e.x && b.x < e.x + e.width && b.y > e.y && b.y < e.y + e.height) {
+                        e.active = false;
+                        bullets.splice(bi, 1);
+                        score += 10;
+                        document.getElementById('scoreVal').textContent = score;
+                    }
+                });
+            });
+            draw();
+        }
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; if (e.key === ' ') bullets.push({ x: player.x + player.width / 2, y: player.y }); });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

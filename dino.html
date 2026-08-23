@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Run</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #87CEEB; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span></div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let dino = { x: 50, y: 300, width: 30, height: 40, velocityY: 0, jumping: false };
+        let obstacles = [];
+        let score = 0;
+        function createObstacle() {
+            obstacles.push({ x: canvas.width, y: 330, width: 30, height: 30 });
+        }
+        let obstacleTimer = 0;
+        function draw() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, 340, canvas.width, 60);
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+            ctx.fillStyle = '#8B0000';
+            obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.width, o.height));
+        }
+        function update() {
+            if ((keys[' '] || keys['ArrowUp']) && !dino.jumping) {
+                dino.velocityY = -15;
+                dino.jumping = true;
+            }
+            dino.velocityY += 0.5;
+            dino.y += dino.velocityY;
+            if (dino.y >= 300) {
+                dino.y = 300;
+                dino.jumping = false;
+                dino.velocityY = 0;
+            }
+            obstacleTimer++;
+            if (obstacleTimer > 100) {
+                createObstacle();
+                obstacleTimer = 0;
+            }
+            obstacles.forEach((o, i) => {
+                o.x -= 5;
+                if (o.x < -30) {
+                    obstacles.splice(i, 1);
+                    score += 10;
+                    document.getElementById('scoreVal').textContent = score;
+                }
+                if (dino.x < o.x + o.width && dino.x + dino.width > o.x && dino.y < o.y + o.height && dino.y + dino.height > o.y) {
+                    alert(`Game Over! Score: ${score}`);
+                    location.reload();
+                }
+            });
+            draw();
+        }
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asteroids</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #000; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span></div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 300, y: 200, angle: 0, size: 15 };
+        let bullets = [];
+        let asteroids = [];
+        let score = 0;
+        for (let i = 0; i < 3; i++) {
+            asteroids.push({ x: Math.random() * 500 + 50, y: Math.random() * 300 + 50, dx: Math.random() - 0.5, dy: Math.random() - 0.5, size: 40 });
+        }
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.angle);
+            ctx.strokeStyle = '#fff';
+            ctx.beginPath();
+            ctx.moveTo(0, -player.size);
+            ctx.lineTo(-player.size, player.size);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(player.size, player.size);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+            ctx.fillStyle = '#0f0';
+            asteroids.forEach(a => { ctx.beginPath(); ctx.arc(a.x, a.y, a.size, 0, Math.PI * 2); ctx.fill(); });
+            ctx.fillStyle = '#fff';
+            bullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 2, 0, Math.PI * 2); ctx.fill(); });
+        }
+        function update() {
+            if (keys['ArrowLeft']) player.angle -= 0.1;
+            if (keys['ArrowRight']) player.angle += 0.1;
+            if (keys[' ']) bullets.push({ x: player.x + Math.cos(player.angle) * 15, y: player.y + Math.sin(player.angle) * 15, dx: Math.cos(player.angle) * 5, dy: Math.sin(player.angle) * 5 });
+            bullets.forEach((b, i) => {
+                b.x += b.dx;
+                b.y += b.dy;
+                if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bullets.splice(i, 1);
+            });
+            asteroids.forEach(a => {
+                a.x += a.dx;
+                a.y += a.dy;
+                if (a.x < 0) a.x = canvas.width;
+                if (a.x > canvas.width) a.x = 0;
+                if (a.y < 0) a.y = canvas.height;
+                if (a.y > canvas.height) a.y = 0;
+            });
+            bullets.forEach((b, bi) => {
+                asteroids.forEach((a, ai) => {
+                    if (Math.hypot(b.x - a.x, b.y - a.y) < a.size) {
+                        bullets.splice(bi, 1);
+                        asteroids.splice(ai, 1);
+                        score += 10;
+                        document.getElementById('scoreVal').textContent = score;
+                    }
+                });
+            });
+            draw();
+        }
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

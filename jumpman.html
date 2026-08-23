@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jump Man</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #87CEEB; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span></div>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 250, y: 300, width: 20, height: 20, velocityY: 0, onGround: false };
+        let platforms = [];
+        let coins = [];
+        let score = 0;
+        for (let i = 0; i < 5; i++) {
+            platforms.push({ x: Math.random() * 500, y: 300 - i * 60, width: 100, height: 10 });
+            coins.push({ x: Math.random() * 500, y: 280 - i * 60, active: true });
+        }
+        platforms.push({ x: 0, y: 390, width: 600, height: 10 });
+        function draw() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8B7355';
+            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+            ctx.fillStyle = '#ff0';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#FFD700';
+            coins.forEach(c => { if (c.active) ctx.fillRect(c.x, c.y, 10, 10); });
+        }
+        function update() {
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= 5;
+            if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += 5;
+            player.velocityY += 0.5;
+            player.y += player.velocityY;
+            player.onGround = false;
+            platforms.forEach(p => {
+                if (player.y + player.height >= p.y && player.y + player.height <= p.y + 20 && player.x + player.width > p.x && player.x < p.x + p.width && player.velocityY >= 0) {
+                    player.velocityY = -12;
+                    player.onGround = true;
+                }
+            });
+            coins.forEach(c => {
+                if (c.active && player.x < c.x + 10 && player.x + player.width > c.x && player.y < c.y + 10 && player.y + player.height > c.y) {
+                    c.active = false;
+                    score += 10;
+                    document.getElementById('scoreVal').textContent = score;
+                }
+            });
+            if (player.y > canvas.height) { alert(`Game Over! Score: ${score}`); location.reload(); }
+            draw();
+        }
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

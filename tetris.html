@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #222;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+        #gameContainer {
+            display: flex;
+            gap: 20px;
+        }
+        canvas {
+            border: 2px solid white;
+            background: #000;
+        }
+        #info {
+            color: white;
+            text-align: center;
+        }
+        #score, #level {
+            color: #0f0;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: white;">TETRIS</h1>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="200" height="400"></canvas>
+        <div id="info">
+            <div>Score: <span id="score">0</span></div>
+            <div>Level: <span id="level">1</span></div>
+            <div style="margin-top: 20px; font-size: 14px; color: #aaa;">
+                Arrow Keys: Move<br>
+                Up: Rotate<br>
+                Space: Drop
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
+
+        const blockSize = 20;
+        const boardWidth = 10;
+        const boardHeight = 20;
+
+        let board = Array(boardHeight).fill(null).map(() => Array(boardWidth).fill(0));
+        let score = 0;
+        let level = 1;
+        let speed = 1000 - (level * 50);
+
+        const pieces = [
+            [[1,1,1,1]],
+            [[1,1],[1,1]],
+            [[0,1,1],[1,1,0]],
+            [[1,1,0],[0,1,1]],
+            [[1,0],[1,0],[1,1]],
+            [[0,1],[0,1],[1,1]],
+            [[0,1,0],[1,1,1]]
+        ];
+
+        let currentPiece = { x: 3, y: 0, shape: pieces[Math.floor(Math.random() * pieces.length)] };
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            board.forEach((row, y) => {
+                row.forEach((val, x) => {
+                    if (val) {
+                        ctx.fillStyle = '#0f0';
+                        ctx.fillRect(x * blockSize, y * blockSize, blockSize - 1, blockSize - 1);
+                    }
+                });
+            });
+
+            ctx.fillStyle = '#0ff';
+            currentPiece.shape.forEach((row, y) => {
+                row.forEach((val, x) => {
+                    if (val) {
+                        ctx.fillRect((currentPiece.x + x) * blockSize, (currentPiece.y + y) * blockSize, blockSize - 1, blockSize - 1);
+                    }
+                });
+            });
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= boardWidth; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * blockSize, 0);
+                ctx.lineTo(i * blockSize, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i <= boardHeight; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * blockSize);
+                ctx.lineTo(canvas.width, i * blockSize);
+                ctx.stroke();
+            }
+        }
+
+        function canMove(dx, dy, shape = currentPiece.shape) {
+            for (let y = 0; y < shape.length; y++) {
+                for (let x = 0; x < shape[y].length; x++) {
+                    if (shape[y][x]) {
+                        let newX = currentPiece.x + x + dx;
+                        let newY = currentPiece.y + y + dy;
+                        if (newX < 0 || newX >= boardWidth || newY >= boardHeight) return false;
+                        if (newY >= 0 && board[newY][newX]) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function placePiece() {
+            currentPiece.shape.forEach((row, y) => {
+                row.forEach((val, x) => {
+                    if (val) {
+                        let boardY = currentPiece.y + y;
+                        if (boardY >= 0) {
+                            board[boardY][currentPiece.x + x] = 1;
+                        }
+                    }
+                });
+            });
+
+            for (let y = boardHeight - 1; y >= 0; y--) {
+                if (board[y].every(cell => cell === 1)) {
+                    board.splice(y, 1);
+                    board.unshift(Array(boardWidth).fill(0));
+                    score += 100;
+                    scoreDisplay.textContent = score;
+                }
+            }
+
+            currentPiece = { x: 3, y: 0, shape: pieces[Math.floor(Math.random() * pieces.length)] };
+            if (!canMove(0, 0)) {
+                alert(`Game Over! Score: ${score}`);
+                location.reload();
+            }
+        }
+
+        function rotatePiece() {
+            let rotated = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i])).reverse();
+            if (canMove(0, 0, rotated)) {
+                currentPiece.shape = rotated;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && canMove(-1, 0)) currentPiece.x--;
+            if (e.key === 'ArrowRight' && canMove(1, 0)) currentPiece.x++;
+            if (e.key === 'ArrowDown' && canMove(0, 1)) currentPiece.y++;
+            if (e.key === 'ArrowUp') rotatePiece();
+            if (e.key === ' ') {
+                while (canMove(0, 1)) currentPiece.y++;
+                placePiece();
+            }
+        });
+
+        function gameLoop() {
+            if (canMove(0, 1)) {
+                currentPiece.y++;
+            } else {
+                placePiece();
+            }
+            draw();
+        }
+
+        setInterval(gameLoop, speed);
+        draw();
+    </script>
+</body>
+</html>

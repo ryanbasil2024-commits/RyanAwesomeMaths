@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #222;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+        canvas {
+            border: 2px solid white;
+            background: #000;
+        }
+        #score {
+            color: white;
+            font-size: 20px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span></div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreVal');
+
+        const tileSize = 20;
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,0,0,1],
+            [1,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+            [1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+            [1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,0,1,1,1,1,0,1,1,1,1,0,0,1],
+            [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,1,0,1,0,1,1,1,1,0,1,1,1,1,0,1,0,1,1,1],
+            [1,1,0,1,0,1,1,1,1,0,1,1,1,1,0,1,0,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        let pacman = { x: 9, y: 9, dir: 0, nextDir: 0 };
+        let ghosts = [
+            { x: 8, y: 7, color: '#ff0000' },
+            { x: 9, y: 7, color: '#ffb6db' },
+            { x: 9, y: 8, color: '#00ffff' },
+            { x: 10, y: 7, color: '#ffb347' }
+        ];
+        let score = 0;
+        let pellets = new Set();
+
+        for (let y = 0; y < maze.length; y++) {
+            for (let x = 0; x < maze[y].length; x++) {
+                if (maze[y][x] === 0) {
+                    pellets.add(y * 20 + x);
+                }
+            }
+        }
+
+        function canMove(x, y) {
+            return x >= 0 && x < maze[0].length && y >= 0 && y < maze.length && maze[y][x] === 0;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0066ff';
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#ffb897';
+            pellets.forEach(id => {
+                let y = Math.floor(id / 20);
+                let x = id % 20;
+                ctx.fillRect(x * tileSize + 8, y * tileSize + 8, 4, 4);
+            });
+
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(pacman.x * tileSize + tileSize / 2, pacman.y * tileSize + tileSize / 2, tileSize / 2 - 2, 0.2, Math.PI * 1.8);
+            ctx.lineTo(pacman.x * tileSize + tileSize / 2, pacman.y * tileSize + tileSize / 2);
+            ctx.fill();
+
+            ghosts.forEach(ghost => {
+                ctx.fillStyle = ghost.color;
+                ctx.fillRect(ghost.x * tileSize, ghost.y * tileSize, tileSize, tileSize);
+                ctx.fillStyle = 'white';
+                ctx.fillRect(ghost.x * tileSize + 3, ghost.y * tileSize + 3, 3, 3);
+                ctx.fillRect(ghost.x * tileSize + 14, ghost.y * tileSize + 3, 3, 3);
+            });
+        }
+
+        function update() {
+            let dx = 0, dy = 0;
+            if (pacman.nextDir === 0) dx = 1;
+            if (pacman.nextDir === 1) dx = -1;
+            if (pacman.nextDir === 2) dy = 1;
+            if (pacman.nextDir === 3) dy = -1;
+
+            if (canMove(pacman.x + dx, pacman.y + dy)) {
+                pacman.x += dx;
+                pacman.y += dy;
+                pacman.dir = pacman.nextDir;
+            }
+
+            let id = pacman.y * 20 + pacman.x;
+            if (pellets.has(id)) {
+                pellets.delete(id);
+                score += 10;
+                scoreDisplay.textContent = score;
+            }
+
+            ghosts.forEach(ghost => {
+                let dirs = [];
+                if (canMove(ghost.x + 1, ghost.y)) dirs.push({x: 1, y: 0});
+                if (canMove(ghost.x - 1, ghost.y)) dirs.push({x: -1, y: 0});
+                if (canMove(ghost.x, ghost.y + 1)) dirs.push({x: 0, y: 1});
+                if (canMove(ghost.x, ghost.y - 1)) dirs.push({x: 0, y: -1});
+                if (dirs.length > 0) {
+                    let d = dirs[Math.floor(Math.random() * dirs.length)];
+                    ghost.x += d.x;
+                    ghost.y += d.y;
+                }
+            });
+
+            ghosts.forEach(ghost => {
+                if (ghost.x === pacman.x && ghost.y === pacman.y) {
+                    alert(`Game Over! Score: ${score}`);
+                    location.reload();
+                }
+            });
+
+            if (pellets.size === 0) {
+                alert(`You Won! Score: ${score}`);
+                location.reload();
+            }
+
+            draw();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') pacman.nextDir = 0;
+            if (e.key === 'ArrowLeft') pacman.nextDir = 1;
+            if (e.key === 'ArrowDown') pacman.nextDir = 2;
+            if (e.key === 'ArrowUp') pacman.nextDir = 3;
+        });
+
+        setInterval(update, 150);
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #222;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+        canvas {
+            border: 2px solid white;
+            background: #000;
+        }
+        #score {
+            color: white;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Player: <span id="p1">0</span> - AI: <span id="p2">0</span></div>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let paddles = {
+            player: { x: 10, y: 175, width: 10, height: 50, dy: 0 },
+            ai: { x: 780, y: 175, width: 10, height: 50, dy: 0 }
+        };
+
+        let ball = { x: 400, y: 200, radius: 8, dx: 4, dy: 4 };
+        let score = { player: 0, ai: 0 };
+
+        function update() {
+            if (keys['ArrowUp'] && paddles.player.y > 0) paddles.player.y -= 5;
+            if (keys['ArrowDown'] && paddles.player.y < canvas.height - paddles.player.height) paddles.player.y += 5;
+
+            if (ball.x > 400) {
+                if (paddles.ai.y + paddles.ai.height / 2 < ball.y) paddles.ai.y += 4;
+                if (paddles.ai.y + paddles.ai.height / 2 > ball.y) paddles.ai.y -= 4;
+            }
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.dy = -ball.dy;
+            }
+
+            if (ball.x - ball.radius < paddles.player.x + paddles.player.width &&
+                ball.y > paddles.player.y && ball.y < paddles.player.y + paddles.player.height) {
+                ball.dx = -ball.dx;
+                ball.x = paddles.player.x + paddles.player.width + ball.radius;
+            }
+
+            if (ball.x + ball.radius > paddles.ai.x &&
+                ball.y > paddles.ai.y && ball.y < paddles.ai.y + paddles.ai.height) {
+                ball.dx = -ball.dx;
+                ball.x = paddles.ai.x - ball.radius;
+            }
+
+            if (ball.x - ball.radius < 0) {
+                score.ai++;
+                document.getElementById('p2').textContent = score.ai;
+                resetBall();
+            }
+            if (ball.x + ball.radius > canvas.width) {
+                score.player++;
+                document.getElementById('p1').textContent = score.player;
+                resetBall();
+            }
+
+            draw();
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * 4;
+            ball.dy = (Math.random() * 2 - 1) * 4;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(paddles.player.x, paddles.player.y, paddles.player.width, paddles.player.height);
+            ctx.fillRect(paddles.ai.x, paddles.ai.y, paddles.ai.width, paddles.ai.height);
+
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        const keys = {};
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

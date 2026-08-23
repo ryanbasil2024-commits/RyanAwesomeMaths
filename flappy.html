@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #222;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid white;
+            display: block;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">Score: <span id="score">0</span> | High: <span id="high">0</span></div>
+    <canvas id="gameCanvas" width="320" height="480"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const highDisplay = document.getElementById('high');
+
+        let high = localStorage.getItem('flappyHigh') || 0;
+        highDisplay.textContent = high;
+
+        let bird = { x: 50, y: 150, width: 20, height: 20, velocity: 0 };
+        let pipes = [];
+        let score = 0;
+        let gameRunning = true;
+        let pipeCounter = 0;
+
+        const gravity = 0.5;
+        const jumpForce = -12;
+        const pipeGap = 120;
+        const pipeSpeed = 4;
+
+        function jump() {
+            bird.velocity = jumpForce;
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            bird.velocity += gravity;
+            bird.y += bird.velocity;
+
+            if (bird.y + bird.height > canvas.height || bird.y < 0) {
+                endGame();
+                return;
+            }
+
+            pipeCounter++;
+            if (pipeCounter > 120) {
+                let gapStart = Math.random() * (canvas.height - pipeGap - 40) + 20;
+                pipes.push({
+                    x: canvas.width,
+                    topHeight: gapStart,
+                    bottomStart: gapStart + pipeGap,
+                    scored: false
+                });
+                pipeCounter = 0;
+            }
+
+            pipes.forEach((pipe, index) => {
+                pipe.x -= pipeSpeed;
+
+                if (bird.x + bird.width > pipe.x && bird.x < pipe.x + 50) {
+                    if (bird.y < pipe.topHeight || bird.y + bird.height > pipe.bottomStart) {
+                        endGame();
+                        return;
+                    }
+                }
+
+                if (!pipe.scored && bird.x > pipe.x + 50) {
+                    pipe.scored = true;
+                    score++;
+                    scoreDisplay.textContent = score;
+                    if (score > high) {
+                        high = score;
+                        highDisplay.textContent = high;
+                        localStorage.setItem('flappyHigh', high);
+                    }
+                }
+
+                if (pipe.x < -50) {
+                    pipes.splice(index, 1);
+                }
+            });
+
+            draw();
+        }
+
+        function draw() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+
+            ctx.fillStyle = '#228B22';
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, 50, pipe.topHeight);
+                ctx.fillRect(pipe.x, pipe.bottomStart, 50, canvas.height - pipe.bottomStart);
+            });
+
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            alert(`Game Over! Score: ${score}`);
+            location.reload();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                e.preventDefault();
+                jump();
+            }
+        });
+        canvas.addEventListener('click', jump);
+
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Practice</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #87CEEB; cursor: crosshair; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span> | Accuracy: <span id="accuracy">0</span>%</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let targets = [];
+        let score = 0;
+        let shots = 0;
+        let hits = 0;
+        
+        for (let i = 0; i < 5; i++) {
+            targets.push({
+                x: Math.random() * 700,
+                y: Math.random() * 500,
+                radius: 20,
+                active: true
+            });
+        }
+        
+        function draw() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff00';
+            targets.forEach(t => {
+                if (t.active) {
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            });
+        }
+        
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            shots++;
+            
+            targets.forEach(t => {
+                if (t.active) {
+                    const dist = Math.sqrt((clickX - t.x) ** 2 + (clickY - t.y) ** 2);
+                    if (dist < t.radius) {
+                        t.active = false;
+                        score += 10;
+                        hits++;
+                        
+                        targets.push({
+                            x: Math.random() * 700,
+                            y: Math.random() * 500,
+                            radius: 20,
+                            active: true
+                        });
+                    }
+                }
+            });
+            
+            document.getElementById('scoreVal').textContent = score;
+            document.getElementById('accuracy').textContent = Math.round((hits / shots) * 100);
+            draw();
+        });
+        
+        draw();
+    </script>
+</body>
+</html>

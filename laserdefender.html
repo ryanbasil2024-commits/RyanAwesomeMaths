@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laser Defender</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #000; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span> | Health: <span id="health">100</span></div>
+    <canvas id="gameCanvas" width="700" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 320, y: 450, width: 40, height: 40 };
+        let bullets = [];
+        let enemies = [];
+        let score = 0;
+        let health = 100;
+        let waveCount = 0;
+        
+        function spawnWave() {
+            waveCount++;
+            for (let i = 0; i < 3 + waveCount; i++) {
+                enemies.push({
+                    x: Math.random() * 650,
+                    y: 20,
+                    width: 20,
+                    height: 20,
+                    velocityX: (Math.random() - 0.5) * 4,
+                    velocityY: 2 + waveCount * 0.5
+                });
+            }
+        }
+        spawnWave();
+        
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#ffff00';
+            bullets.forEach(b => ctx.fillRect(b.x, b.y, 3, 10));
+            ctx.fillStyle = '#ff0000';
+            enemies.forEach(e => ctx.fillRect(e.x, e.y, e.width, e.height));
+        }
+        
+        function update() {
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= 6;
+            if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += 6;
+            
+            bullets.forEach((b, i) => {
+                b.y -= 8;
+                if (b.y < 0) bullets.splice(i, 1);
+            });
+            
+            enemies.forEach((e, i) => {
+                e.x += e.velocityX;
+                e.y += e.velocityY;
+                
+                if (e.x < 0) e.velocityX = -e.velocityX;
+                if (e.x > 680) e.velocityX = -e.velocityX;
+                
+                if (e.y > 500) {
+                    enemies.splice(i, 1);
+                    health -= 10;
+                    if (health <= 0) { alert(`Game Over! Score: ${score}`); location.reload(); }
+                }
+            });
+            
+            bullets.forEach((b, bi) => {
+                enemies.forEach((e, ei) => {
+                    if (b.x > e.x && b.x < e.x + e.width && b.y > e.y && b.y < e.y + e.height) {
+                        bullets.splice(bi, 1);
+                        enemies.splice(ei, 1);
+                        score += 10;
+                    }
+                });
+            });
+            
+            if (enemies.length === 0) spawnWave();
+            
+            document.getElementById('scoreVal').textContent = score;
+            document.getElementById('health').textContent = health;
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ') bullets.push({ x: player.x + player.width / 2, y: player.y });
+        });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zombie Blast</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #1a1a1a; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="scoreVal">0</span> | Wave: <span id="wave">1</span> | Health: <span id="health">100</span></div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 400, y: 500, width: 30, height: 40 };
+        let bullets = [];
+        let zombies = [];
+        let score = 0;
+        let wave = 1;
+        let health = 100;
+        
+        function spawnWave() {
+            for (let i = 0; i < 3 + wave * 2; i++) {
+                zombies.push({
+                    x: Math.random() * 700,
+                    y: Math.random() * 200,
+                    width: 25,
+                    height: 30,
+                    health: 3,
+                    velocityX: (Math.random() - 0.5) * 2
+                });
+            }
+        }
+        spawnWave();
+        
+        function draw() {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#ffff00';
+            bullets.forEach(b => ctx.fillRect(b.x, b.y, 3, 8));
+            ctx.fillStyle = '#00aa00';
+            zombies.forEach(z => {
+                ctx.fillRect(z.x, z.y, z.width, z.height);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(z.x + 5, z.y + 5, 5, 5);
+                ctx.fillRect(z.x + 15, z.y + 5, 5, 5);
+                ctx.fillStyle = '#00aa00';
+            });
+        }
+        
+        function update() {
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= 6;
+            if (keys['ArrowRight'] && player.x < 770) player.x += 6;
+            if (keys[' ']) bullets.push({ x: player.x + 15, y: player.y });
+            
+            bullets.forEach((b, i) => {
+                b.y -= 7;
+                if (b.y < 0) bullets.splice(i, 1);
+            });
+            
+            zombies.forEach((z, i) => {
+                z.x += z.velocityX;
+                z.y += 1;
+                
+                if (z.y > 600) {
+                    zombies.splice(i, 1);
+                    health -= 10;
+                    if (health <= 0) { alert(`Game Over! Score: ${score}`); location.reload(); }
+                }
+            });
+            
+            bullets.forEach((b, bi) => {
+                zombies.forEach((z, zi) => {
+                    if (b.x > z.x && b.x < z.x + z.width && b.y > z.y && b.y < z.y + z.height) {
+                        bullets.splice(bi, 1);
+                        z.health--;
+                        if (z.health <= 0) {
+                            zombies.splice(zi, 1);
+                            score += 15;
+                        }
+                    }
+                });
+            });
+            
+            if (zombies.length === 0) {
+                wave++;
+                document.getElementById('wave').textContent = wave;
+                spawnWave();
+            }
+            
+            document.getElementById('scoreVal').textContent = score;
+            document.getElementById('health').textContent = health;
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

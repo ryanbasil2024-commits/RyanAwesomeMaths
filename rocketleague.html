@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket League</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: linear-gradient(180deg, #87CEEB, #90EE90); }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">You: <span id="playerScore">0</span> | AI: <span id="aiScore">0</span> | Time: <span id="time">60</span>s</div>
+    <canvas id="gameCanvas" width="1000" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 100, y: 500, width: 30, height: 25, velocityX: 0, velocityY: 0 };
+        let ai = { x: 900, y: 500, width: 30, height: 25, velocityX: 0, velocityY: 0 };
+        let ball = { x: 500, y: 300, radius: 10, velocityX: 0, velocityY: 0 };
+        let playerScore = 0;
+        let aiScore = 0;
+        let time = 60;
+        let startTime = Date.now();
+        
+        function draw() {
+            ctx.fillStyle = 'rgba(135, 206, 235, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(500, 0);
+            ctx.lineTo(500, 600);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(20, 0, 50, 600);
+            ctx.fillStyle = '#0000ff';
+            ctx.fillRect(930, 0, 50, 600);
+            ctx.fillStyle = '#FF6B6B';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#6B6BFF';
+            ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function update() {
+            time = 60 - Math.round((Date.now() - startTime) / 1000);
+            document.getElementById('time').textContent = Math.max(0, time);
+            
+            if (keys['ArrowUp'] && player.y > 0) player.velocityY = -6;
+            else if (keys['ArrowDown'] && player.y < 575) player.velocityY = 6;
+            else player.velocityY *= 0.9;
+            
+            if (keys['ArrowLeft'] && player.x > 0) player.velocityX = -6;
+            else if (keys['ArrowRight'] && player.x < 970) player.velocityX = 6;
+            else player.velocityX *= 0.9;
+            
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+            
+            if (ball.x > ai.x - 50) {
+                if (ball.y < ai.y + 30) ai.velocityY = -4;
+                else if (ball.y > ai.y + 20) ai.velocityY = 4;
+                else ai.velocityY *= 0.9;
+            }
+            ai.y += ai.velocityY;
+            if (ai.y < 0) ai.y = 0;
+            if (ai.y > 575) ai.y = 575;
+            
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+            ball.velocityY += 0.3;
+            
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > 600) ball.velocityY = -ball.velocityY * 0.8;
+            if (ball.x - ball.radius < 70) {
+                if (playerScore > aiScore) playerScore++;
+                ball.x = 500;
+                ball.y = 300;
+                ball.velocityX = 0;
+                ball.velocityY = 0;
+            }
+            if (ball.x + ball.radius > 930) {
+                if (aiScore > playerScore) aiScore++;
+                ball.x = 500;
+                ball.y = 300;
+                ball.velocityX = 0;
+                ball.velocityY = 0;
+            }
+            
+            if (Math.hypot(ball.x - player.x - 15, ball.y - player.y - 12) < 30) {
+                ball.velocityX = 8;
+                ball.velocityY = -3;
+                playerScore++;
+            }
+            if (Math.hypot(ball.x - ai.x - 15, ball.y - ai.y - 12) < 30) {
+                ball.velocityX = -8;
+                ball.velocityY = -3;
+                aiScore++;
+            }
+            
+            if (time <= 0) {
+                if (playerScore > aiScore) alert(`You Won! ${playerScore}-${aiScore}`);
+                else if (aiScore > playerScore) alert(`AI Won! ${aiScore}-${playerScore}`);
+                else alert(`Draw! ${playerScore}-${aiScore}`);
+                location.reload();
+            }
+            
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('aiScore').textContent = aiScore;
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

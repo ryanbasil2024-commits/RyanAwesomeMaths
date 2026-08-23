@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parkour Runner</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #87CEEB; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Distance: <span id="distance">0</span>m | Speed: <span id="speed">1.0</span>x</div>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 100, y: 300, width: 20, height: 30, velocityY: 0, jumping: false };
+        let obstacles = [];
+        let walls = [];
+        let distance = 0;
+        let speed = 1;
+        let cameraX = 0;
+        
+        function createObstacle() {
+            const type = Math.random();
+            if (type < 0.5) {
+                obstacles.push({ x: cameraX + 800, y: 330, width: 30, height: 30, type: 'box' });
+            } else {
+                walls.push({ x: cameraX + 800, y: 280, width: 80, height: 100, type: 'wall' });
+            }
+        }
+        
+        let obstacleTimer = 0;
+        
+        function draw() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, 350, 800, 50);
+            ctx.fillStyle = '#FF6B6B';
+            ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
+            ctx.fillStyle = '#8B0000';
+            obstacles.forEach(o => ctx.fillRect(o.x - cameraX, o.y, o.width, o.height));
+            walls.forEach(w => ctx.fillRect(w.x - cameraX, w.y, w.width, w.height));
+        }
+        
+        function update() {
+            if ((keys[' '] || keys['ArrowUp']) && !player.jumping) {
+                player.velocityY = -15;
+                player.jumping = true;
+            }
+            
+            player.velocityY += 0.5;
+            player.y += player.velocityY;
+            
+            if (player.y >= 320) {
+                player.y = 320;
+                player.jumping = false;
+            }
+            
+            player.x += 3 * speed;
+            cameraX = player.x - 100;
+            
+            obstacleTimer++;
+            if (obstacleTimer > Math.max(40, 100 - speed * 10)) {
+                createObstacle();
+                obstacleTimer = 0;
+            }
+            
+            obstacles.forEach((o, i) => {
+                if (o.x < cameraX - 50) obstacles.splice(i, 1);
+                if (player.x < o.x + o.width && player.x + player.width > o.x &&
+                    player.y < o.y + o.height && player.y + player.height > o.y) {
+                    alert(`Game Over! Distance: ${Math.round(distance)}m`);
+                    location.reload();
+                }
+            });
+            
+            walls.forEach((w, i) => {
+                if (w.x < cameraX - 100) walls.splice(i, 1);
+                if (player.x < w.x + w.width && player.x + player.width > w.x &&
+                    player.y < w.y + w.height && player.y + player.height > w.y &&
+                    player.velocityY > 0) {
+                    player.y = w.y - player.height;
+                    player.velocityY = -15;
+                }
+            });
+            
+            distance = Math.round(player.x / 100) * 10;
+            speed = 1 + distance / 1000;
+            document.getElementById('distance').textContent = distance;
+            document.getElementById('speed').textContent = speed.toFixed(1);
+            
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

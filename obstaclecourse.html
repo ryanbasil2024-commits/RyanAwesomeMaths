@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obstacle Course</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: linear-gradient(180deg, #87CEEB, #90EE90); }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Level: <span id="level">1</span> | Time: <span id="time">0</span>s</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 50, y: 500, width: 20, height: 25, velocityY: 0, velocityX: 0 };
+        let level = 1;
+        let time = 0;
+        let platforms = [];
+        let spikes = [];
+        let goal = { x: 700, y: 480, width: 60, height: 40 };
+        let startTime = Date.now();
+        
+        function generateLevel() {
+            platforms = [];
+            spikes = [];
+            const platformCount = 8 + level * 3;
+            for (let i = 0; i < platformCount; i++) {
+                const y = 500 - i * 60;
+                platforms.push({
+                    x: Math.random() * 700,
+                    y: y,
+                    width: 70 + Math.random() * 50,
+                    height: 12
+                });
+                if (Math.random() < level * 0.1) {
+                    spikes.push({
+                        x: Math.random() * 700,
+                        y: y - 20
+                    });
+                }
+            }
+            platforms.push({ x: 0, y: 560, width: 800, height: 40 });
+            goal = { x: 700, y: 460 - (platformCount - 1) * 60, width: 60, height: 40 };
+        }
+        generateLevel();
+        
+        function draw() {
+            ctx.fillStyle = 'rgba(135, 206, 235, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8B7355';
+            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+            ctx.fillStyle = '#FF4500';
+            spikes.forEach(s => {
+                ctx.beginPath();
+                ctx.moveTo(s.x, s.y + 20);
+                ctx.lineTo(s.x + 10, s.y);
+                ctx.lineTo(s.x + 20, s.y + 20);
+                ctx.closePath();
+                ctx.fill();
+            });
+            ctx.fillStyle = '#00FF00';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+        
+        function update() {
+            time = Math.round((Date.now() - startTime) / 1000);
+            document.getElementById('time').textContent = time;
+            
+            if (keys['ArrowLeft']) player.velocityX = -7;
+            else if (keys['ArrowRight']) player.velocityX = 7;
+            else player.velocityX *= 0.85;
+            
+            player.x += player.velocityX;
+            player.velocityY += 0.6;
+            player.y += player.velocityY;
+            
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > 800) player.x = 800 - player.width;
+            
+            platforms.forEach(p => {
+                if (player.y + player.height >= p.y && player.y + player.height <= p.y + 20 &&
+                    player.x + player.width > p.x && player.x < p.x + p.width && player.velocityY >= 0) {
+                    player.velocityY = -13;
+                }
+            });
+            
+            spikes.forEach(s => {
+                if (player.x < s.x + 20 && player.x + player.width > s.x &&
+                    player.y < s.y + 25 && player.y + player.height > s.y) {
+                    alert(`Game Over! Time: ${time}s`);
+                    location.reload();
+                }
+            });
+            
+            if (player.x < goal.x + goal.width && player.x + player.width > goal.x &&
+                player.y < goal.y + goal.height && player.y + player.height > goal.y) {
+                level++;
+                document.getElementById('level').textContent = level;
+                generateLevel();
+                player.x = 50;
+                player.y = 500;
+                startTime = Date.now();
+            }
+            
+            if (player.y > 650) { alert(`Game Over! Time: ${time}s`); location.reload(); }
+            
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

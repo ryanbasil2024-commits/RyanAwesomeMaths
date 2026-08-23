@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rope Swing</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #87CEEB; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Level: <span id="level">1</span> | Distance: <span id="distance">0</span>m</div>
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 100, y: 200, width: 15, height: 15, velocityX: 0, velocityY: 0 };
+        let rope = { attachX: 200, attachY: 100, length: 80, angle: 0 };
+        let platforms = [];
+        let level = 1;
+        let distance = 0;
+        let swinging = false;
+        
+        function generateLevel() {
+            platforms = [];
+            for (let i = 1; i < 10; i++) {
+                platforms.push({
+                    x: 200 + i * 100,
+                    y: 350 + Math.sin(i) * 50,
+                    width: 80,
+                    height: 20
+                });
+            }
+        }
+        generateLevel();
+        
+        function draw() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(rope.attachX, rope.attachY);
+            ctx.lineTo(player.x, player.y);
+            ctx.stroke();
+            ctx.fillStyle = '#8B7355';
+            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+            ctx.fillStyle = '#FF6B6B';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.width, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function update() {
+            if (keys[' '] && !swinging) {
+                swinging = true;
+                player.velocityX = 8;
+            }
+            
+            if (swinging) {
+                player.velocityY += 0.4;
+                player.x += player.velocityX;
+                player.y += player.velocityY;
+                
+                let dx = player.x - rope.attachX;
+                let dy = player.y - rope.attachY;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > rope.length) {
+                    let ratio = rope.length / dist;
+                    player.x = rope.attachX + dx * ratio;
+                    player.y = rope.attachY + dy * ratio;
+                    player.velocityX *= -0.5;
+                    player.velocityY *= -0.5;
+                }
+            }
+            
+            platforms.forEach(p => {
+                if (player.y + player.width >= p.y && player.y <= p.y + 30 &&
+                    player.x > p.x && player.x < p.x + p.width) {
+                    swinging = false;
+                    player.velocityY = -5;
+                    player.velocityX = 10;
+                    distance += 1;
+                    rope.attachX += 100;
+                    rope.attachY = 100 + Math.random() * 50;
+                    document.getElementById('distance').textContent = distance;
+                }
+            });
+            
+            if (player.y > 600) { alert(`Game Over! Distance: ${distance}m`); location.reload(); }
+            
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

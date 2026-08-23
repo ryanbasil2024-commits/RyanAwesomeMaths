@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Jump Challenge</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #1a1a2e; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Height: <span id="height">0</span>m</div>
+    <canvas id="gameCanvas" width="600" height="800"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 290, y: 700, width: 20, height: 30, velocityY: 0, velocityX: 0, wallSide: null };
+        let height = 0;
+        let walls = [];
+        
+        for (let i = 0; i < 40; i++) {
+            if (i % 2 === 0) {
+                walls.push({ x: 50, y: 700 - i * 50, width: 80, height: 20 });
+                walls.push({ x: 470, y: 700 - i * 50, width: 80, height: 20 });
+            }
+        }
+        
+        function draw() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, 0, 100, canvas.height);
+            ctx.fillRect(500, 0, 100, canvas.height);
+            ctx.fillStyle = '#e94560';
+            walls.forEach(w => ctx.fillRect(w.x, w.y, w.width, w.height));
+            ctx.fillStyle = '#00d4ff';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText('Height: ' + Math.max(0, Math.round(-player.y / 10)) + 'm', 20, 40);
+        }
+        
+        function update() {
+            if (keys['ArrowLeft'] && player.x > 100) player.velocityX = -6;
+            if (keys['ArrowRight'] && player.x < 480) player.velocityX = 6;
+            player.velocityX *= 0.95;
+            player.x += player.velocityX;
+            
+            let onWall = false;
+            walls.forEach(w => {
+                if (player.x + player.width > w.x && player.x < w.x + w.width &&
+                    player.y + player.height >= w.y && player.y + player.height <= w.y + 25) {
+                    player.velocityY = -12;
+                    onWall = true;
+                }
+            });
+            
+            player.velocityY += 0.5;
+            player.y += player.velocityY;
+            
+            if (player.y > 800) { alert(`Game Over! Height: ${Math.max(0, Math.round(-height / 10))}m`); location.reload(); }
+            height = Math.min(height, player.y);
+            document.getElementById('height').textContent = Math.max(0, Math.round(-height / 10));
+            
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

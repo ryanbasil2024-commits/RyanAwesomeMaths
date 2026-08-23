@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Master</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #222; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid white; background: #87CEEB; }
+        #score { position: absolute; top: 20px; color: white; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div id="score">Level: <span id="level">1</span> | Score: <span id="scoreVal">0</span></div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 50, y: 500, width: 25, height: 25, velocityY: 0, velocityX: 0, onGround: false };
+        let platforms = [];
+        let collectibles = [];
+        let level = 1;
+        let score = 0;
+        
+        function generateLevel() {
+            platforms = [];
+            collectibles = [];
+            const platformCount = 8 + level * 2;
+            for (let i = 0; i < platformCount; i++) {
+                platforms.push({
+                    x: Math.random() * 700,
+                    y: 500 - i * 60,
+                    width: 80 + Math.random() * 40,
+                    height: 12
+                });
+                collectibles.push({
+                    x: Math.random() * 700 + 40,
+                    y: 480 - i * 60,
+                    active: true
+                });
+            }
+            platforms.push({ x: 0, y: 570, width: 800, height: 30 });
+            platforms.push({ x: 700, y: 100, width: 100, height: 50 });
+        }
+        
+        generateLevel();
+        
+        function draw() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8B7355';
+            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+            ctx.fillStyle = '#FF6B6B';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#FFD700';
+            collectibles.forEach(c => { if (c.active) ctx.fillRect(c.x, c.y, 15, 15); });
+        }
+        
+        function update() {
+            if (keys['ArrowLeft'] && player.x > 0) player.velocityX = -8;
+            else if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.velocityX = 8;
+            else player.velocityX *= 0.9;
+            
+            player.x += player.velocityX;
+            player.velocityY += 0.6;
+            player.y += player.velocityY;
+            player.onGround = false;
+            
+            platforms.forEach(p => {
+                if (player.y + player.height >= p.y && player.y + player.height <= p.y + 20 &&
+                    player.x + player.width > p.x && player.x < p.x + p.width && player.velocityY >= 0) {
+                    player.velocityY = -14;
+                    player.onGround = true;
+                }
+            });
+            
+            collectibles.forEach(c => {
+                if (c.active && player.x < c.x + 15 && player.x + player.width > c.x &&
+                    player.y < c.y + 15 && player.y + player.height > c.y) {
+                    c.active = false;
+                    score += 10;
+                    document.getElementById('scoreVal').textContent = score;
+                }
+            });
+            
+            if (player.y > 700) { alert(`Game Over! Score: ${score}`); location.reload(); }
+            
+            if (player.x > 700 && player.y < 150) {
+                level++;
+                document.getElementById('level').textContent = level;
+                generateLevel();
+                player.x = 50;
+                player.y = 500;
+            }
+            
+            draw();
+        }
+        
+        const keys = {};
+        document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+        setInterval(update, 30);
+        draw();
+    </script>
+</body>
+</html>

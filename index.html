@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unblocked Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        body.light-mode {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto 30px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .navbar h1 {
+            color: white;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .theme-toggle, .sort-btn, .category-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .theme-toggle:hover, .sort-btn:hover, .category-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: white;
+            width: 200px;
+            font-size: 14px;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-tag {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-tag.active {
+            background: #fff;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .filter-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+            background: #f8f9ff;
+        }
+
+        .game-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .game-card h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+
+        .game-card .category {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .game-card p {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 10px;
+            min-height: 30px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .difficulty.easy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty.medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty.hard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .game-card button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .game-card button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1000px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .game-iframe {
+            flex: 1;
+            border: none;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .leaderboard {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .leaderboard h2 {
+            margin-bottom: 15px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-item:first-child {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: white;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .navbar {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+                height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <h1>🎮 Game Hub</h1>
+        <div class="controls">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search games...">
+            <button class="sort-btn" onclick="toggleSort()">📊 Sort</button>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 Theme</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3 id="totalGames">51</h3>
+                <p>Total Games</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="gamesPlayed">0</h3>
+                <p>Games Played</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="totalScore">0</h3>
+                <p>Total Points</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="playTime">0h</h3>
+                <p>Play Time</p>
+            </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="filters" id="filters"></div>
+
+        <!-- Games Grid -->
+        <div class="games-grid" id="gamesGrid"></div>
+
+        <!-- Leaderboard -->
+        <div class="leaderboard">
+            <h2>🏆 High Scores</h2>
+            <div id="leaderboard"></div>
+        </div>
+    </div>
+
+    <!-- Game Modal -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="gameTitle"></h2>
+                <button class="close-btn" onclick="closeGame()">&times;</button>
+            </div>
+            <iframe id="gameFrame" class="game-iframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const games = [
+            { name: 'Snake', file: 'snake.html', category: 'Classic', difficulty: 'Easy', icon: '🐍' },
+            { name: 'Tetris', file: 'tetris.html', category: 'Puzzle', difficulty: 'Medium', icon: '🧱' },
+            { name: '2048', file: '2048.html', category: 'Puzzle', difficulty: 'Easy', icon: '🔢' },
+            { name: 'Flappy Bird', file: 'flappy.html', category: 'Action', difficulty: 'Hard', icon: '🐦' },
+            { name: 'Pong', file: 'pong.html', category: 'Sports', difficulty: 'Easy', icon: '🎾' },
+            { name: 'Pac-Man', file: 'pacman.html', category: 'Classic', difficulty: 'Medium', icon: '👾' },
+            { name: 'Breakout', file: 'breakout.html', category: 'Arcade', difficulty: 'Medium', icon: '🧩' },
+            { name: 'Space Invaders', file: 'spaceinvaders.html', category: 'Shooter', difficulty: 'Hard', icon: '👽' },
+            { name: 'Asteroid', file: 'asteroid.html', category: 'Shooter', difficulty: 'Hard', icon: '💫' },
+            { name: 'Jump Man', file: 'jumpman.html', category: 'Platformer', difficulty: 'Medium', icon: '🤸' },
+            { name: 'Dino Run', file: 'dino.html', category: 'Action', difficulty: 'Easy', icon: '🦖' },
+            { name: 'Memory Game', file: 'memory.html', category: 'Puzzle', difficulty: 'Easy', icon: '🧠' },
+            { name: 'Simon Says', file: 'simon.html', category: 'Brain', difficulty: 'Medium', icon: '🎵' },
+            { name: 'Whack-a-Mole', file: 'whackamole.html', category: 'Arcade', difficulty: 'Medium', icon: '🔨' },
+            { name: 'Color Match', file: 'colormatch.html', category: 'Puzzle', difficulty: 'Easy', icon: '🎨' },
+            { name: 'Ball Bounce', file: 'ballbounce.html', category: 'Arcade', difficulty: 'Medium', icon: '⚽' },
+            { name: 'Dodge Master', file: 'dodge.html', category: 'Action', difficulty: 'Medium', icon: '🚀' },
+            { name: 'Brick Puzzle', file: 'brickpuzzle.html', category: 'Puzzle', difficulty: 'Medium', icon: '🧱' },
+            { name: 'Speed Runner', file: 'speedrunner.html', category: 'Platformer', difficulty: 'Hard', icon: '💨' },
+            { name: 'Click Speed', file: 'clickspeed.html', category: 'Reflex', difficulty: 'Easy', icon: '⚡' },
+            { name: 'Tap Dancing', file: 'tapdance.html', category: 'Rhythm', difficulty: 'Medium', icon: '🎶' },
+            { name: 'Reaction Time', file: 'reaction.html', category: 'Reflex', difficulty: 'Easy', icon: '⏱️' },
+            { name: 'Marble Maze', file: 'marblemaze.html', category: 'Puzzle', difficulty: 'Medium', icon: '🔮' },
+            { name: 'Block Blast', file: 'blockblast.html', category: 'Puzzle', difficulty: 'Medium', icon: '💣' },
+            { name: 'Fruit Ninja', file: 'fruitninja.html', category: 'Action', difficulty: 'Medium', icon: '🍉' },
+            { name: 'Endless Runner', file: 'endlessrunner.html', category: 'Action', difficulty: 'Hard', icon: '🏃' },
+            { name: 'Catch Game', file: 'catch.html', category: 'Arcade', difficulty: 'Easy', icon: '🎒' },
+            { name: 'Mouse Avoider', file: 'mouseavoider.html', category: 'Action', difficulty: 'Hard', icon: '🖱️' },
+            { name: 'Bubble Shooter', file: 'bubbleshooter.html', category: 'Shooter', difficulty: 'Easy', icon: '🫧' },
+            { name: 'Match 3 Gems', file: 'match3.html', category: 'Puzzle', difficulty: 'Medium', icon: '💎' },
+            { name: 'Circle Clicker', file: 'circleclicker.html', category: 'Reflex', difficulty: 'Easy', icon: '⭕' },
+            { name: 'Flying Bird', file: 'flyingbird.html', category: 'Action', difficulty: 'Medium', icon: '🦅' },
+            { name: 'Bomb Defusal', file: 'bombdefusal.html', category: 'Puzzle', difficulty: 'Hard', icon: '💣' },
+            { name: 'Pattern Master', file: 'patternmaster.html', category: 'Brain', difficulty: 'Hard', icon: '🎯' },
+            { name: 'Type Racer', file: 'typeracer.html', category: 'Racing', difficulty: 'Medium', icon: '🏎️' },
+            { name: 'Zombie Shooter', file: 'zombieshooter.html', category: 'Shooter', difficulty: 'Hard', icon: '🧟' },
+            { name: 'Tower Defense', file: 'towerdefense.html', category: 'Strategy', difficulty: 'Hard', icon: '🏰' },
+            { name: 'Dungeon Escape', file: 'dungeonescape.html', category: 'Adventure', difficulty: 'Medium', icon: '🏺' },
+            { name: 'Platformer', file: 'platformer.html', category: 'Platformer', difficulty: 'Medium', icon: '⛰️' },
+            { name: 'Sliding Puzzle', file: 'slidingpuzzle.html', category: 'Puzzle', difficulty: 'Easy', icon: '🔷' },
+            { name: 'Spin Wheel', file: 'spinwheel.html', category: 'Arcade', difficulty: 'Easy', icon: '🎡' },
+            { name: 'Shuffle Quest', file: 'shufflequest.html', category: 'Card', difficulty: 'Medium', icon: '🃏' },
+            { name: 'Memory Train', file: 'memorytrain.html', category: 'Brain', difficulty: 'Medium', icon: '🚂' },
+            { name: 'Laser Grid', file: 'lasergrid.html', category: 'Puzzle', difficulty: 'Hard', icon: '✨' },
+            { name: 'Pixel Painter', file: 'pixelpainter.html', category: 'Creative', difficulty: 'Easy', icon: '🎨' },
+            { name: 'Quick Reflexes', file: 'quickreflexes.html', category: 'Reflex', difficulty: 'Hard', icon: '⚡' },
+            { name: 'Swipe Mania', file: 'swipemania.html', category: 'Action', difficulty: 'Medium', icon: '👉' },
+            { name: 'Chain Breaker', file: 'chainbreaker.html', category: 'Puzzle', difficulty: 'Medium', icon: '⛓️' },
+            { name: 'Endless Clicker', file: 'endlessclicker.html', category: 'Idle', difficulty: 'Easy', icon: '🖱️' },
+            { name: 'Pipe Puzzle', file: 'pipepuzzle.html', category: 'Puzzle', difficulty: 'Medium', icon: '🔧' },
+            { name: "Baldi's Basics", file: 'baldis.html', category: 'Adventure', difficulty: 'Hard', icon: '📚' }
+        ];
+
+        let allGames = [...games];
+        let filteredGames = [...games];
+        let currentFilter = 'All';
+        let sortBy = 'name'; // 'name' or 'difficulty'
+        let playedGames = JSON.parse(localStorage.getItem('playedGames')) || [];
+        let highScores = JSON.parse(localStorage.getItem('highScores')) || {};
+
+        // Initialize
+        initializeFilters();
+        displayGames(filteredGames);
+        updateStats();
+        updateLeaderboard();
+
+        function initializeFilters() {
+            const categories = ['All', ...new Set(games.map(g => g.category))];
+            const filterContainer = document.getElementById('filters');
+            
+            categories.forEach(category => {
+                const tag = document.createElement('div');
+                tag.className = 'filter-tag' + (category === 'All' ? ' active' : '');
+                tag.textContent = category;
+                tag.onclick = () => filterByCategory(category);
+                filterContainer.appendChild(tag);
+            });
+        }
+
+        function filterByCategory(category) {
+            currentFilter = category;
+            
+            // Update active filter
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+                if (tag.textContent === category) tag.classList.add('active');
+            });
+
+            if (category === 'All') {
+                filteredGames = [...allGames];
+            } else {
+                filteredGames = allGames.filter(g => g.category === category);
+            }
+            
+            applySort();
+            displayGames(filteredGames);
+        }
+
+        function toggleSort() {
+            sortBy = sortBy === 'name' ? 'difficulty' : 'name';
+            applySort();
+            displayGames(filteredGames);
+        }
+
+        function applySort() {
+            if (sortBy === 'difficulty') {
+                const difficultyOrder = { 'Easy': 1, 'Medium': 2, 'Hard': 3 };
+                filteredGames.sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
+            } else {
+                filteredGames.sort((a, b) => a.name.localeCompare(b.name));
+            }
+        }
+
+        function displayGames(gamesToDisplay) {
+            const gamesGrid = document.getElementById('gamesGrid');
+            gamesGrid.innerHTML = '';
+
+            if (gamesToDisplay.length === 0) {
+                gamesGrid.innerHTML = '<div class="empty-message">No games found</div>';
+                return;
+            }
+
+            gamesToDisplay.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
+                    <div class="game-icon">${game.icon}</div>
+                    <h3>${game.name}</h3>
+                    <div class="category">${game.category}</div>
+                    <p>${game.name} - ${game.category} Game</p>
+                    <div class="difficulty ${game.difficulty.toLowerCase()}">${game.difficulty}</div>
+                    <button onclick="openGame('${game.name}', '${game.file}')">Play Now</button>
+                `;
+                gamesGrid.appendChild(card);
+            });
+        }
+
+        function openGame(gameName, gameFile) {
+            document.getElementById('gameTitle').textContent = gameName;
+            document.getElementById('gameFrame').src = gameFile;
+            document.getElementById('gameModal').style.display = 'block';
+            
+            // Track played games
+            if (!playedGames.includes(gameName)) {
+                playedGames.push(gameName);
+                localStorage.setItem('playedGames', JSON.stringify(playedGames));
+                updateStats();
+            }
+        }
+
+        function closeGame() {
+            document.getElementById('gameModal').style.display = 'none';
+            document.getElementById('gameFrame').src = '';
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        }
+
+        function updateStats() {
+            document.getElementById('gamesPlayed').textContent = playedGames.length;
+            document.getElementById('totalScore').textContent = Object.values(highScores).reduce((a, b) => a + b, 0);
+            
+            let hours = Math.floor(playedGames.length * 0.5);
+            document.getElementById('playTime').textContent = hours + 'h';
+        }
+
+        function updateLeaderboard() {
+            const leaderboardDiv = document.getElementById('leaderboard');
+            const sortedScores = Object.entries(highScores)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            if (sortedScores.length === 0) {
+                leaderboardDiv.innerHTML = '<div style="opacity: 0.7;">Play games to see high scores!</div>';
+                return;
+            }
+
+            leaderboardDiv.innerHTML = sortedScores.map((score, i) => `
+                <div class="leaderboard-item">
+                    <span>${i + 1}. ${score[0]}</span>
+                    <span>${score[1]} pts</span>
+                </div>
+            `).join('');
+        }
+
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            filteredGames = allGames.filter(g => 
+                g.name.toLowerCase().includes(query) || 
+                g.category.toLowerCase().includes(query)
+            );
+            applySort();
+            displayGames(filteredGames);
+        });
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeGame();
+        });
+
+        window.onclick = (event) => {
+            const modal = document.getElementById('gameModal');
+            if (event.target === modal) closeGame();
+        };
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+        }
+    </script>
+</body>
+</html>
